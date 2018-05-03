@@ -15,14 +15,22 @@ if [ ! -e ./resources/local.ini ]; then
     msg_info "generating local.ini (including postgresql password)"
     export POSTGRES_PASSWORD=$(python -c "import random;import string;print(''.join(random.SystemRandom().choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(40)))")
     export RABBITMQ_DEFAULT_PASS=$(python -c "import random;import string;print(''.join(random.SystemRandom().choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(40)))")
+    export SECRET_KEY=$(python -c "import random;import string;print(''.join(random.SystemRandom().choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(50)))")
     cat >> ./resources/local.ini <<EOF
 [global]
 POSTGRES_PASSWORD=$POSTGRES_PASSWORD
 RABBITMQ_DEFAULT_PASS=$RABBITMQ_DEFAULT_PASS
+SECRET_KEY=$SECRET_KEY
 DEBUG=True
 EOF
 else
     source resources/local.ini 2>/dev/null
+fi
+
+if [ ! -e ./composeexample/local_settings.py ]; then
+    cat >> ./composeexample/local_settings.py <<EOF
+ALLOWED_HOSTS = ['*']
+EOF
 fi
 
 if [ ! -e ./certs/dev.key ]; then

@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 
 import os
 import configparser
+from django.utils.translation import ugettext, ugettext_lazy
+from kombu import Exchange, Queue
 
 # from composeexample.local_settings import *
 
@@ -124,22 +126,32 @@ AUTH_PASSWORD_VALIDATORS = [
 # https://docs.djangoproject.com/en/1.11/topics/i18n/
 
 LANGUAGE_CODE = 'en-us'
+LOCALE_PATHS = [
+    os.path.join(BASE_DIR, 'locale/'),
+]
 
 TIME_ZONE = 'UTC'
 
 USE_I18N = True
+LANGUAGES = [
+  ('en', ugettext_lazy('English')),
+  # ('fr', ugettext_lazy('French')),
+]
 
 USE_L10N = True
 
 USE_TZ = True
 
+CELERY_ENABLE_UTC = True
+CELERY_TIMEZONE = "UTC"
+
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
 STATIC_ROOT = os.path.join(BASE_DIR, '.static')
-STATIC_URL = config['global']['STATIC_URL'] + '/'
+STATIC_URL = config['global'].get('STATIC_URL', '/static') + '/'
 MEDIA_ROOT = os.path.join(BASE_DIR, '.media')
-MEDIA_URL = config['global']['MEDIA_URL'] + '/'
+MEDIA_URL = config['global'].get('MEDIA_URL', '/media') + '/'
 
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static"),
@@ -152,4 +164,81 @@ CRONJOBS = [
 CRONTAB_LOCK_JOBS = True
 CRONTAB_COMMAND_SUFFIX = '>> /var/log/apache2/django-crontab.log'
 
-# from local_settings import *
+SESSION_COOKIE_AGE = 14 * 24 * 60 * 60 if DEBUG else 12 * 60 * 60
+SESSION_COOKIE_SECURE = False if DEBUG else True
+
+
+################################################################################
+# Redis
+################################################################################
+
+REDIS_PORT = 6379
+REDIS_DB = 0
+REDIS_HOST = os.environ.get('REDIS_PORT_6379_TCP_ADDR', 'redis')
+
+RABBIT_HOSTNAME = os.environ.get('RABBIT_PORT_5672_TCP', 'rabbit')
+
+if RABBIT_HOSTNAME.startswith('tcp://'):
+    RABBIT_HOSTNAME = RABBIT_HOSTNAME.split('//')[1]
+
+BROKER_URL = os.environ.get('BROKER_URL', '')
+if not BROKER_URL:
+    BROKER_URL = 'amqp://{user}:{password}@{hostname}/{vhost}/'.format(
+        user=os.environ.get('RABBITMQ_DEFAULT_USER', 'admin'),
+        password=os.environ.get('RABBITMQ_DEFAULT_PASS', 'mypass'),
+        hostname=RABBIT_HOSTNAME,
+        vhost=os.environ.get('RABBIT_ENV_VHOST', ''))
+
+# We don't want to have dead connections stored on rabbitmq, so we have to negotiate using heartbeats
+BROKER_HEARTBEAT = '?heartbeat=30'
+if not BROKER_URL.endswith(BROKER_HEARTBEAT):
+    BROKER_URL += BROKER_HEARTBEAT
+
+BROKER_POOL_LIMIT = 1
+BROKER_CONNECTION_TIMEOUT = 10
+
+################################################################################
+# Celery configuration
+################################################################################
+
+# configure queues, currently we have only one
+CELERY_DEFAULT_QUEUE = 'default'
+CELERY_QUEUES = (
+    Queue('default', Exchange('default'), routing_key='default'),
+)
+
+# Sensible settings for celery
+CELERY_ALWAYS_EAGER = False
+CELERY_ACKS_LATE = True
+CELERY_TASK_PUBLISH_RETRY = True
+CELERY_DISABLE_RATE_LIMITS = False
+
+# By default we will ignore result
+# If you want to see results and try out tasks interactively, change it to False
+# Or change this setting on tasks level
+CELERY_IGNORE_RESULT = True
+CELERY_SEND_TASK_ERROR_EMAILS = False
+CELERY_TASK_RESULT_EXPIRES = 600
+
+# Set redis as celery result backend
+CELERY_RESULT_BACKEND = 'redis://%s:%d/%d' % (REDIS_HOST, REDIS_PORT, REDIS_DB)
+CELERY_REDIS_MAX_CONNECTIONS = 1
+
+# Don't use pickle as serializer, json is much safer
+CELERY_TASK_SERIALIZER = "json"
+CELERY_ACCEPT_CONTENT = ['application/json']
+
+CELERYD_HIJACK_ROOT_LOGGER = False
+CELERYD_PREFETCH_MULTIPLIER = 1
+CELERYD_MAX_TASKS_PER_CHILD = 1000
+
+CELERY_ENABLED = os.environ.get('RABBITMQ_DEFAULT_USER', '') != ''
+
+################################################################################
+# Local settings
+################################################################################
+try:
+    from .local_settings import *
+except ImportError as e:
+    print(e)
+    pass

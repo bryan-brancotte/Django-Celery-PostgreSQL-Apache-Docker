@@ -23,13 +23,17 @@ RUN a2enmod \
 RUN mkdir /code
 WORKDIR /code
 
+ADD requirements.txt /code/
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+
 COPY ./resources/docker-entrypoint.sh /
 RUN chmod a+x /docker-entrypoint.sh
 ENTRYPOINT ["/docker-entrypoint.sh"]
 
 COPY ./resources/django.conf /etc/apache2/sites-enabled/django.conf
 
-ADD requirements.txt /code/
-RUN pip install --no-cache-dir -r requirements.txt
+# create unprivileged user
+RUN adduser --disabled-password --gecos '' myuser
 
 ADD . /code/

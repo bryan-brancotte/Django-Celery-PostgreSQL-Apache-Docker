@@ -6,4 +6,4 @@ __pycache__/
 *$py.class
 resources/local.ini
 *.mo
-
+certs/

@@ -8,3 +8,4 @@ resources/local.ini
 *.mo
 certs/
 local_settings.py
+local.ini

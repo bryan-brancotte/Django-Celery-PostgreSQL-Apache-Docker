@@ -21,17 +21,17 @@ from kombu import Exchange, Queue
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 locals_ini = [
-    os.path.join(BASE_DIR, 'resources','default.ini'),
+    os.path.join(BASE_DIR, 'resources', 'default.ini'),
     os.path.join('etc', 'composeexample', 'default.ini'),
-    os.path.join(BASE_DIR, 'resources','local.ini'),
+    os.path.join(BASE_DIR, 'resources', 'local.ini'),
     os.path.join('etc', 'composeexample', 'local.ini'),
 ]
 config = configparser.ConfigParser()
+config.add_section('global')
 config.optionxform = str
 for local_ini in locals_ini:
     if os.path.isfile(local_ini):
         config.read(local_ini)
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.11/howto/deployment/checklist/
@@ -40,9 +40,9 @@ for local_ini in locals_ini:
 SECRET_KEY = config['global'].get('SECRET_KEY', '()w5g$ei8xobl5ka1ehmcu22z#4h=*7zc&oip6&e(*=k#ew0p1')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config['global'].get('DEBUG', 'true').lower() == 'true'
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = []
 
 # Application definition
 

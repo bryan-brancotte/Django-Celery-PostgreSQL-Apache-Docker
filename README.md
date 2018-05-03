@@ -6,9 +6,9 @@
 ./resources/setup.sh
 ```
 
-It will initialize the password of the db in resources/local.ini and then the db in /opt/dpad/
+It will initialize the password of the db in resources/local.ini and then the db in /opt/dcpad/
 
-To change the folder, edit [docker-compose.yml](https://github.com/bryan-brancotte/Django-PostgreSQL-Apache-Docker/blob/master/docker-compose.yml#L9). For testing purpose you can set it to /tmp/dpad/.
+To change the folder, edit [docker-compose.yml](https://github.com/bryan-brancotte/Django-PostgreSQL-Apache-Docker/blob/master/docker-compose.yml#L9). For testing purpose you can set it to /tmp/dcpad/.
 
 ## Run it
 

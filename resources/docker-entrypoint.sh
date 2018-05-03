@@ -10,6 +10,15 @@ python manage.py migrate
 msg_info "Compilling localization (.po -> .mo)"
 python manage.py compilemessages
 
+STATIC_ROOT_DIR=$(python manage.py shell -c "from django.conf import settings; print(settings.STATIC_ROOT)")
+msg_info "Creating static root at $STATIC_ROOT_DIR"
+if [ "$STATIC_ROOT_DIR" != "" ]; then
+    mkdir -p $STATIC_ROOT_DIR
+    chmod 777 $STATIC_ROOT_DIR
+else
+    msg_warning "settings.STATIC_ROOT missing, passed"
+fi
+
 msg_info "Collecting static files"
 python manage.py collectstatic --noinput
 

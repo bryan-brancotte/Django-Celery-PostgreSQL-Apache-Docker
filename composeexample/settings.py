@@ -18,6 +18,8 @@ from kombu import Exchange, Queue
 # from composeexample.local_settings import *
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
+from composeexample import db_finder
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 locals_ini = [
@@ -89,6 +91,10 @@ WSGI_APPLICATION = 'composeexample.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
+if os.environ.get('POSTGRES_PASSWORD', '') == '':
+    DATABASES_HOST = db_finder.get_db_ip()
+else:
+    DATABASES_HOST = 'db'
 
 DATABASES = {
     'default': {
@@ -96,7 +102,7 @@ DATABASES = {
         'NAME': 'postgres',
         'USER': 'postgres',
         'PASSWORD': config['global']['POSTGRES_PASSWORD'],
-        'HOST': 'db',
+        'HOST': DATABASES_HOST,
         'PORT': 5432,
     }
 }

@@ -12,18 +12,25 @@ To change the folder, edit [docker-compose.yml](https://github.com/bryan-brancot
 
 ## Run it
 
+### Production use case
+
 ```
-docker-compose up
+docker-compose up --build [-d]
 ```
+
+### Development use case
+
+If you want to run the webserver with a `python manage runserver.py`, like during your development, you need to have access to the db. To do so start the database: 
+```
+docker-compose run db
+```
+ and then in your terminal: 
+ ```
+ python manage runserver.py
+ ```
+ The ip of the database is found thanks to [get_db_ip](./composeexample/db_finder.py), if you encounter any problem feel free to fix it and do a PR !
 
 ## None-apache hosting
-
-You can simply start the web container (which will start the db) and 
-not use Apache. Once the container started you might want to have its ip:
-```
-docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(docker ps -aq) | head -n 1 
-```
-For the remaining of this section, we consider that you got 172.18.0.3
 
 
 ### Using django web server
@@ -51,5 +58,11 @@ It will be served at [https://172.18.0.3](https://172.18.0.3)
 You can enter the container by typing
 ```
 docker-compose run web bash
+```
+
+### No hosting, just the db
+You can enter the container by typing
+```
+docker-compose run db
 ```
 

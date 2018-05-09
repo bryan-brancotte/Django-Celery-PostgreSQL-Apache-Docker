@@ -1,9 +1,10 @@
 import json
 
+from celery.result import ResultSet
 from django.db import models
 from django.urls import reverse
 
-from composeexample import settings
+from bdchem import settings
 
 
 class Author(models.Model):
@@ -40,6 +41,16 @@ class Author(models.Model):
         if self.__original_name != self.name:
             from myapp import tasks
             if settings.CELERY_ENABLED:
+                # Wait for the task to complete:
+                # res = tasks.compute_job.delay(pk=self.pk)
+                # res.wait(timeout=10)
+
+                # Wait for the task to complete in a result set:
+                # rs = ResultSet([])
+                # rs.add(tasks.compute_job.delay(pk=self.pk))
+                # rs.join(timeout=10)
+
+                # Don't wait
                 tasks.compute_job.delay(pk=self.pk)
             else:
                 tasks.compute_job(pk=self.pk)
